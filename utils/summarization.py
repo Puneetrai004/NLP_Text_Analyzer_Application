@@ -1,10 +1,10 @@
-from gensim.summarization import summarize as gensim_summarize
+# utils/summarization.py
 from nltk.tokenize import sent_tokenize
-import traceback
+import numpy as np
 
 def summarize_text(text, ratio=0.3):
     """
-    Summarize text using gensim's TextRank algorithm
+    Summarize text using a simple extractive approach
     
     Args:
         text (str): Input text
@@ -13,17 +13,24 @@ def summarize_text(text, ratio=0.3):
     Returns:
         str: Summarized text
     """
-    if not text or len(sent_tokenize(text)) < 3:
-        return ""
+    if not text or len(text) < 100:
+        return text
     
     try:
-        # Use gensim's summarize function
-        return gensim_summarize(text, ratio=ratio)
+        # Split into sentences
+        sentences = sent_tokenize(text)
+        
+        if len(sentences) <= 3:
+            return text
+        
+        # Calculate number of sentences for summary
+        n_sentences = max(1, int(len(sentences) * ratio))
+        
+        # Simple approach: take first n sentences
+        # For a more sophisticated approach, you could implement sentence scoring
+        summary = ' '.join(sentences[:n_sentences])
+        
+        return summary
     except Exception as e:
-        # Fallback to a simple extractive summarization
-        try:
-            sentences = sent_tokenize(text)
-            n_sentences = max(1, int(len(sentences) * ratio))
-            return ' '.join(sentences[:n_sentences])
-        except:
-            return ""
+        print(f"Error in summarization: {e}")
+        return text[:int(len(text) * ratio)]
