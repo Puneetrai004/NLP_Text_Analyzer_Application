@@ -1,17 +1,20 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
 import spacy
 from textblob import TextBlob
+from wordcloud import WordCloud
 import time
 
-from utils.preprocessing import preprocess_text
-from utils.sentiment import analyze_sentiment
-from utils.ner import extract_entities
-from utils.summarization import summarize_text
+# Set page configuration as the first Streamlit command
+st.set_page_config(
+    page_title="NLP Text Analysis App",
+    page_icon="📊",
+    layout="wide"
+)
 
 # Download necessary NLTK resources
 @st.cache_resource
@@ -25,17 +28,83 @@ def download_nltk_resources():
 def load_spacy_model():
     return spacy.load('en_core_web_sm')
 
+# Text preprocessing function
+def preprocess_text(text, remove_stopwords=True, remove_punctuation=True, lemmatize=True):
+    if not text:
+        return ""
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Tokenize
+    tokens = word_tokenize(text)
+    
+    # Remove stopwords
+    if remove_stopwords:
+        stop_words = set(stopwords.words('english'))
+        tokens = [token for token in tokens if token not in stop_words]
+    
+    # Remove punctuation
+    if remove_punctuation:
+        tokens = [token for token in tokens if token.isalnum()]
+    
+    # Lemmatize
+    if lemmatize:
+        lemmatizer = nltk.stem.WordNetLemmatizer()
+        tokens = [lemmatizer.lemmatize(token) for token in tokens]
+    
+    # Join tokens back into text
+    return ' '.join(tokens)
+
+# Sentiment analysis function
+def analyze_sentiment(text):
+    blob = TextBlob(text)
+    return {
+        'polarity': blob.sentiment.polarity,
+        'subjectivity': blob.sentiment.subjectivity,
+    }
+
+# Named entity recognition function
+def extract_entities(text, nlp):
+    if not text:
+        return []
+    
+    doc = nlp(text)
+    entities = []
+    for ent in doc.ents:
+        entities.append({
+            'text': ent.text,
+            'label': ent.label_
+        })
+    return entities
+
+# Text summarization function (alternative to Gensim)
+def summarize_text(text, ratio=0.3):
+    if not text or len(text) < 100:
+        return text
+    
+    try:
+        # Split into sentences
+        sentences = sent_tokenize(text)
+        
+        if len(sentences) <= 3:
+            return text
+        
+        # Calculate number of sentences for summary
+        n_sentences = max(1, int(len(sentences) * ratio))
+        
+        # Simple approach: take first n sentences
+        summary = ' '.join(sentences[:n_sentences])
+        
+        return summary
+    except Exception as e:
+        print(f"Error in summarization: {e}")
+        return text[:int(len(text) * ratio)]
+
 def main():
     # Initialize resources
     download_nltk_resources()
     nlp = load_spacy_model()
-    
-    # Set page configuration
-    st.set_page_config(
-        page_title="NLP Text Analysis App",
-        page_icon="📊",
-        layout="wide"
-    )
     
     # Application title and description
     st.title("NLP Text Analysis Application")
