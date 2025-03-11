@@ -9,7 +9,7 @@ A comprehensive NLP application built with Streamlit that provides various text 
 - **Named Entity Recognition (NER)**
   
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://nlp-text-analyzer-application.streamlit.app//)
 
 ### How to run it on your own machine
 
